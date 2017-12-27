@@ -7,9 +7,11 @@ import tensorflow as tf
 # from tensorflow.models.rnn import rnn_cell
 # from tensorflow.models.rnn import rnn
 
-NUM_EXAMPLES = 10000
+NUM_EXAMPLES = 1000#10000
+seq_len = 11#20
 
-train_input = ['{0:020b}'.format(i) for i in range(2**20)]
+format_string = '{0:0' + str(seq_len) + 'b}'
+train_input = [format_string.format(i) for i in range(2**seq_len)]
 shuffle(train_input)
 train_input = [map(int,i) for i in train_input]
 ti  = []
@@ -26,7 +28,7 @@ for i in train_input:
     for j in i:
         if j[0] == 1:
             count+=1
-    temp_list = ([0]*21)
+    temp_list = ([0]*(seq_len + 1))
     temp_list[count]=1
     train_output.append(temp_list)
 
@@ -38,8 +40,8 @@ train_output = train_output[:NUM_EXAMPLES]
 print("test and training data loaded")
 
 
-data = tf.placeholder(tf.float32, [None, 20,1]) #Number of examples, number of input, dimension of each input
-target = tf.placeholder(tf.float32, [None, 21])
+data = tf.placeholder(tf.float32, [None, seq_len,1]) #Number of examples, number of input, dimension of each input
+target = tf.placeholder(tf.float32, [None, seq_len + 1])
 num_hidden = 24
 cell = tf.nn.rnn_cell.LSTMCell(num_hidden,state_is_tuple=True)
 val, _ = tf.nn.dynamic_rnn(cell, data, dtype=tf.float32)
@@ -69,7 +71,13 @@ for i in range(epoch):
         sess.run(minimize,{data: inp, target: out})
     print("Epoch ",str(i))
 
+print("TEST INPUT:")
+print(test_input)
+
+print("\n\nTEST OUTPUT:")
+print(test_output)
+
 incorrect = sess.run(error,{data: test_input, target: test_output})
-print(sess.run(prediction,{data: [[[1],[0],[0],[1],[1],[0],[1],[1],[1],[0],[1],[0],[0],[1],[1],[0],[1],[1],[1],[0]]]}))
+# print(sess.run(prediction,{data: [[[1],[0],[0],[1],[1],[0],[1],[1],[1],[0],[1],[0],[0],[1],[1],[0],[1],[1],[1],[0]]]}))
 print('Epoch {:2d} error {:3.1f}%'.format(i + 1, 100 * incorrect))
 sess.close()
